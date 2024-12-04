@@ -31,6 +31,10 @@
       </Content>
       <Content Include="Days\Day01\Problem.md" />
       <Compile Include="Days\Day01\Solution.fs" />
+      <Content Include="Days\Day02\Problem.md" />
+      <Content Include="Days\Day02\part1_input.txt" />
+      <Compile Include="Days\Day02\Solution.fs" />
+      <Folder Include="Days\Day03\" />
       <Compile Include="Program.fs" />
       <Content Include="Readme.md" />
     </ItemGroup>
