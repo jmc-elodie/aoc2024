@@ -32,6 +32,7 @@
       <Content Include="Days\Day01\Problem.md" />
       <Compile Include="Days\Day01\Solution.fs" />
       <Compile Include="Program.fs" />
+      <Content Include="Readme.md" />
     </ItemGroup>
 
 </Project>
