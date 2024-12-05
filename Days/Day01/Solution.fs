@@ -6,6 +6,16 @@ open FsUnit
 
 open AoC2024.Util
 
+let exampleInput = 
+    """
+    3   4
+    4   3
+    2   5
+    1   3
+    3   9
+    3   3
+    """.Trim()
+
 module PartOne = 
     let solve (left: int list) (right: int list) : int =
         let leftSorted = List.sort left
@@ -15,6 +25,20 @@ module PartOne =
         |> Seq.map (fun (l, r) -> Math.Abs(l - r))
         |> Seq.sum
         
+    let parseAndSolve = ParseInput.intCols2 >> uncurry solve
+
+    [<Test>]
+    let ``example input`` () =
+        exampleInput
+        |> parseAndSolve 
+        |> should equal 11
+     
+    [<Test>]
+    let ``problem input`` () =
+        readTextFromFile @"Days\Day01\part1_input.txt"
+        |> parseAndSolve
+        |> should equal 2031679
+ 
 
 module PartTwo = 
     let solve (left: int list) (right: int list) : int =
@@ -28,45 +52,17 @@ module PartTwo =
             state + value * occurrences
         
         left |> Seq.fold folder 0
-
-let exampleInput = 
-    """
-    3   4
-    4   3
-    2   5
-    1   3
-    3   9
-    3   3
-    """.Trim()
-
-[<Test>]
-let ``part 1 example input`` () =
-    let answer =
-        parseAndSolve exampleInput parseInput_2IntCols (uncurry PartOne.solve)
         
-    answer |> should equal 11
- 
-[<Test>]
-let ``part 1 problem input`` () =
-    let answer = 
-        readParseSolve @"Days\Day01\part1_input.txt" parseInput_2IntCols (uncurry PartOne.solve)
-   
-    printfn $"answer is: %d{answer}"
-    
-    answer |> should equal 2031679
+    let parseAndSolve = ParseInput.intCols2 >> uncurry solve
 
-[<Test>]
-let ``part 2 example input`` () =
-    let answer =
-        parseAndSolve exampleInput parseInput_2IntCols (uncurry PartTwo.solve)
-        
-    answer |> should equal 31
- 
-[<Test>]
-let ``part 2 problem input`` () =
-    
-    let answer = 
-        readParseSolve @"Days\Day01\part2_input.txt" parseInput_2IntCols (uncurry PartTwo.solve)
-        
-    answer |> should equal 19678534
- 
+    [<Test>]
+    let ``example input`` () =
+        exampleInput
+        |> parseAndSolve 
+        |> should equal 31
+     
+    [<Test>]
+    let ``problem input`` () =
+        readTextFromFile @"Days\Day01\part2_input.txt"
+        |> parseAndSolve
+        |> should equal 19678534

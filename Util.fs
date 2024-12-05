@@ -5,35 +5,51 @@ open System.IO
 open System.Text.RegularExpressions
 open NUnit.Framework
 
-let readTextFromFile relativePath =
+let tryReadTextFromFile relativePath =
     let filePath = Path.Combine(TestContext.CurrentContext.TestDirectory, relativePath)
     try 
         let inputStr = File.ReadAllText(filePath)
         Ok inputStr
     with
     | ex -> Error ex
+    
+let readTextFromFile relativePath =
+    let filePath = Path.Combine(TestContext.CurrentContext.TestDirectory, relativePath)
+    try 
+        File.ReadAllText(filePath)
+    with
+    | ex -> failwith $"Failed to read file: %s{ex.ToString()}"
   
 let getValueOrFail (res: Result<'T, 'TError>) : 'T =
     match res with
     | Ok value -> value
     | Error err -> failwith $"Result was error: %s{err.ToString()}"
-   
-// Parses an input string into 2 int32 columns and returns a tuple of those columns as lists
-let parseInput_2IntCols (inputStr: string) : int list * int list =
-    let breakLine (s: string) =
-        let parts = Regex.Split(s.Trim(), @"\s+") |> Array.map Int32.Parse
-        (parts[0], parts[1])
-        
-    inputStr.Trim().Split("\n") 
-    |> Array.toList 
-    |> List.map breakLine 
-    |> List.unzip
 
 let uncurry f (a,b) = f a b
 
-let parseAndSolve inputStr parser solver = inputStr |> parser |> solver
+module ParseInput =
+    // Parses an input string into a list of strings
+    let strings (inputStr: string) : string list =
+        inputStr.Trim().Split("\n") 
+        |> Array.toList 
+      
+    // Parses an input string into 2 int32 columns and returns a tuple of those columns as lists
+    let intCols2 (inputStr: string) : int list * int list =
+        let parseLine (s: string) =
+            let parts = Regex.Split(s.Trim(), @"\s+") |> Array.map Int32.Parse
+            (parts[0], parts[1])
+        
+        strings inputStr    
+        |> List.map parseLine 
+        |> List.unzip
 
-let readParseSolve filePath parser solver = 
-    readTextFromFile filePath 
-    |> Result.map (fun s -> parseAndSolve s parser solver) 
-    |> getValueOrFail
+    // Parses an input string into a list of int arrays
+    let intArray (inputStr: string) : int array list =
+        let parseLine (s:string) =
+            Regex.Split(s.Trim(), @"\s+")
+            |> Array.map Int32.Parse
+            
+        inputStr
+        |> strings
+        |> List.map parseLine
+
