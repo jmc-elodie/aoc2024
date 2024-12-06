@@ -93,6 +93,9 @@ module Array2DExt =
     let inBounds x y arr =
         x >= 0 && x < (Array2D.length1 arr) && 
         y >= 0 && y < (Array2D.length2 arr)
+        
+    let transpose (arr: 'T[,]) : 'T[,] =
+        Array2D.init (Array2D.length2 arr) (Array2D.length1 arr) (fun x y -> arr[y,x])
             
 module SeqExt =
     
@@ -102,3 +105,14 @@ module SeqExt =
     
     // Given a sequence of bools, returns true if all elements are true 
     let all (seq: seq<bool>) : bool = Seq.contains false seq |> not
+
+    let ofArray2D (arr: 'T[,]) : seq<'T> =
+        seq {
+            let count1 = Array2D.length1 arr
+            let count2 = Array2D.length2 arr
+            let b1 = Array2D.base1 arr
+            let b2 = Array2D.base2 arr
+            for i = b1 to b1 + count1 - 1 do
+              for j = b2 to b2 + count2 - 1 do
+                  yield arr[i,j]
+        }

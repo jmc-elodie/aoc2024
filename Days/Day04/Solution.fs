@@ -5,6 +5,21 @@ open NUnit.Framework
 open FsUnit
 
 
+let exampleInput =
+    """
+    MMMSXXMASM
+    MSAMXMSMSA
+    AMXSXMAAMM
+    MSAMASMSMX
+    XMASAMXAMM
+    XXAMMXXAMA
+    SMSMSASXSS
+    SAXAMASAAA
+    MAMMMXMMMM
+    MXMXAXMASX
+    """.Trim()
+            
+
 module PartOne =
     
     // This generates a list of tuples of the possible directions we can match in
@@ -53,20 +68,6 @@ module PartOne =
         
     [<Test>]
     let ``example input``() =
-        let exampleInput =
-            """
-            MMMSXXMASM
-            MSAMXMSMSA
-            AMXSXMAAMM
-            MSAMASMSMX
-            XMASAMXAMM
-            XXAMMXXAMA
-            SMSMSASXSS
-            SAXAMASAAA
-            MAMMMXMMMM
-            MXMXAXMASX
-            """.Trim()
-            
         exampleInput
         |> ParseInput.charArray2D
         |> wordSearch "XMAS"
@@ -78,3 +79,77 @@ module PartOne =
         |> ParseInput.charArray2D
         |> wordSearch "XMAS"
         |> should equal 2583
+
+
+module PartTwo =
+    
+    let xmasRefs =
+        [
+            """
+            M.S
+            .A.
+            M.S
+            """
+
+            """
+            M.M
+            .A.
+            S.S
+            """
+
+            """
+            S.M
+            .A.
+            S.M
+            """
+
+            """
+            S.S
+            .A.
+            M.M
+            """
+        ] |> List.map ParseInput.charArray2D
+    
+    // Search every cell of the board for matches against the provided refs and return the total number of matches 
+    let refSearch (refs: char[,] list) (board: char[,]) =
+        
+        // This compares the reference (passed in with rx, ry and v) to the board cell
+        // if the board cell is 0,0 and the reference is 1, 1, S then the board's
+        // 0 + 1, 0 + 1 cell will be compared to S; matches will return true.
+        let refMatch cx cy rx ry v =
+            let x, y = (cx + rx, cy + ry)
+            match v with
+            | '.' -> true
+            | c ->
+                if Array2DExt.inBounds x y board then
+                    board[x, y] = c
+                else
+                    false
+        
+        // This will search the board at cx, cy against all refs and return the number of matches
+        let countRefMatches cx cy =
+            refs
+            |> List.map (
+                Array2D.mapi (refMatch cx cy)
+                >> SeqExt.ofArray2D
+                >> SeqExt.all)
+            |> SeqExt.countTrue
+        
+        let folder acc x y _ =
+            acc + (countRefMatches x y)
+            
+        board |> Array2DExt.foldi folder 0
+    
+    [<Test>]
+    let ``example input``() =
+        exampleInput
+        |> ParseInput.charArray2D
+        |> refSearch xmasRefs
+        |> should equal 9
+        
+    [<Test>]
+    let ``problem input``() =
+        readTextFromFile @"Days\Day04\input.txt"
+        |> ParseInput.charArray2D
+        |> refSearch xmasRefs
+        |> should equal 1978
