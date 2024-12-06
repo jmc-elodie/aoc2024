@@ -27,6 +27,17 @@ let getValueOrFail (res: Result<'T, 'TError>) : 'T =
 
 let uncurry f (a,b) = f a b
 
+let rec permuteN (n: int) (set: 'a list) : 'a list list =
+    assert (n >= 0)
+    match n, set with
+    | 0, _ ->  []
+    | _, [] -> []
+    | 1, _ ->  List.map (fun x -> [ x ]) set
+    | _ ->
+        permuteN (n - 1) set
+        |> List.allPairs set
+        |> List.map (fun (x,xs) -> x :: xs) 
+
 module ParseInput =
     // Parses an input string into a list of strings
     let strings (inputStr: string) : string list =
@@ -53,3 +64,41 @@ module ParseInput =
         |> strings
         |> List.map parseLine
 
+    let charArray2D (inputStr: string) : char[,] =
+        let parseLine (s:string) = s.Trim().ToCharArray()
+        
+        let lines =
+            inputStr
+            |> strings
+            |> List.map parseLine
+            |> List.toArray
+        
+        let numLines = lines.Length 
+        assert (numLines > 0)
+        
+        let rowLen = lines[0].Length
+        assert (rowLen > 0)
+        
+        Array2D.init numLines rowLen (fun y x -> lines[y][x])
+        
+module Array2DExt =
+
+    let foldi (folder: 'TState -> int -> int -> 'T -> 'TState) (state: 'TState) (arr: 'T[,]) : 'TState =
+        let mutable _state = state
+        let updateState x y value =
+            _state <- folder _state x y value
+        Array2D.iteri updateState arr
+        _state
+        
+    let inBounds x y arr =
+        x >= 0 && x < (Array2D.length1 arr) && 
+        y >= 0 && y < (Array2D.length2 arr)
+            
+module SeqExt =
+    
+    // Given a sequence of bools, counts the number of true elements
+    let countTrue (seq: seq<bool>) : int =
+        Seq.fold (fun acc v -> if v then acc + 1 else acc) 0 seq
+    
+    // Given a sequence of bools, returns true if all elements are true 
+    let all (seq: seq<bool>) : bool = Seq.contains false seq |> not
