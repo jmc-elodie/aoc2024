@@ -1,5 +1,6 @@
 ﻿module AoC2024.Util
 
+open FsUnit
 open System
 open System.IO
 open System.Text.RegularExpressions
@@ -42,12 +43,13 @@ module ParseInput =
     // Parses an input string into a list of strings
     let strings (inputStr: string) : string list =
         inputStr.Trim().Split("\n") 
-        |> Array.toList 
+        |> Array.toList
+        |> List.map (_.Trim())
       
     // Parses an input string into 2 int32 columns and returns a tuple of those columns as lists
     let intCols2 (inputStr: string) : int list * int list =
         let parseLine (s: string) =
-            let parts = Regex.Split(s.Trim(), @"\s+") |> Array.map Int32.Parse
+            let parts = Regex.Split(s, @"\s+") |> Array.map Int32.Parse
             (parts[0], parts[1])
         
         strings inputStr    
@@ -57,7 +59,7 @@ module ParseInput =
     // Parses an input string into a list of int arrays
     let intArray (inputStr: string) : int array list =
         let parseLine (s:string) =
-            Regex.Split(s.Trim(), @"\s+")
+            Regex.Split(s, @"\s+")
             |> Array.map Int32.Parse
             
         inputStr
@@ -65,7 +67,7 @@ module ParseInput =
         |> List.map parseLine
 
     let charArray2D (inputStr: string) : char[,] =
-        let parseLine (s:string) = s.Trim().ToCharArray()
+        let parseLine (s:string) = s.ToCharArray()
         
         let lines =
             inputStr
@@ -116,3 +118,50 @@ module SeqExt =
               for j = b2 to b2 + count2 - 1 do
                   yield arr[i,j]
         }
+
+module Tuple =
+    
+    let flip (a,b) = (b,a)
+    
+    let ofArray2 (arr: 'a array) =
+        assert (arr.Length = 2)
+        (arr[0], arr[1])
+        
+        
+// Utilities for creating and sorting a directed graph of values
+// The graph is stored as a map of nodes to a set of connected nodes
+module Graph =
+
+    let getDefault (k: 'a) (def: 'b) (table: Map<'a, 'b>) : 'b =
+        match Map.tryFind k table with
+        | Some v -> v
+        | None -> def
+    
+    // Creates a graph
+    let create (edges: ('a * 'a) list) =
+        let folder acc (key: 'a, other: 'a) =
+            let adj = getDefault key Set.empty acc
+            Map.add key (Set.add other adj) acc
+                
+        List.fold folder Map.empty edges
+       
+    // https://cp-algorithms.com/graph/topological-sort.html 
+    let topologicalSort (dag: Map<'a,Set<'a>>) (input: seq<'a>) =
+        let inputSet = Set.ofSeq input
+        
+        // Do a depth first traversal of the list keeping track of already visited elements
+        // When an element hasn't been visited, put it in the resulting list
+        // this function takes and returns its state so it can be folded over the nodes of the dag
+        let rec dfs (visited: Set<'a>, sorted: 'a list) (item: 'a) : (Set<'a> * 'a list) =
+            if Set.contains item visited then
+                (visited, sorted)
+            else
+            
+            let visited = Set.add item visited
+            let children = getDefault item Set.empty dag |> Set.intersect inputSet
+            let visited, sorted = Set.fold dfs (visited, sorted) children 
+            (visited, item :: sorted)
+           
+        input
+        |> Seq.fold dfs (Set.empty, [])
+        |> snd
