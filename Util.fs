@@ -1,6 +1,5 @@
 ﻿module AoC2024.Util
 
-open FsUnit
 open System
 open System.IO
 open System.Text.RegularExpressions
@@ -38,6 +37,8 @@ let rec permuteN (n: int) (set: 'a list) : 'a list list =
         permuteN (n - 1) set
         |> List.allPairs set
         |> List.map (fun (x,xs) -> x :: xs) 
+
+let inline tee fn x = x |> fn |> ignore; x
 
 module ParseInput =
     // Parses an input string into a list of strings
@@ -92,12 +93,43 @@ module Array2DExt =
         Array2D.iteri updateState arr
         _state
         
+    let fold (folder: 'TState -> 'T -> 'TState) (state: 'TState) (arr: 'T[,]) : 'TState =
+        let wrappedFolder = (fun s _ _ -> folder s)
+        foldi wrappedFolder state arr
+    
     let inBounds x y arr =
         x >= 0 && x < (Array2D.length1 arr) && 
         y >= 0 && y < (Array2D.length2 arr)
         
     let transpose (arr: 'T[,]) : 'T[,] =
         Array2D.init (Array2D.length2 arr) (Array2D.length1 arr) (fun x y -> arr[y,x])
+        
+    let dims (arr: 'T[,]) =
+        let base1 = Array2D.base1 arr
+        let base2 = Array2D.base2 arr
+        let length1 = Array2D.length1 arr
+        let length2 = Array2D.length2 arr
+        (length1 - base1, length2 - base2)
+   
+    let toSeq (arr: 'T[,]) : seq<(int * int * 'T)> =
+        seq {
+            let base1 = Array2D.base1 arr
+            let base2 = Array2D.base2 arr
+            let length1 = Array2D.length1 arr
+            let length2 = Array2D.length2 arr
+            
+            for x = base1 to base1 + length1 - 1 do
+                for y = base2 to base2 + length2 - 1 do
+                    yield (x, y, arr[x,y])
+        }
+     
+    let findIndex (pred: 'T -> bool) (arr: 'T[,]) : (int * int) =
+        arr |> toSeq |> Seq.find (fun (_, _, v) -> pred v) |> fun (x, y, _) -> (x, y)
+        
+    let setWith (x: int) (y: int) (v: 'T) (arr: 'T[,]) : 'T[,] =
+        let arrCopy = Array2D.copy arr
+        Array2D.set arrCopy x y v
+        arrCopy
             
 module SeqExt =
     
@@ -126,6 +158,9 @@ module Tuple =
     let ofArray2 (arr: 'a array) =
         assert (arr.Length = 2)
         (arr[0], arr[1])
+        
+    let toArray2 (x: 'a, y: 'a) =
+        [| x; y |]
         
         
 // Utilities for creating and sorting a directed graph of values
