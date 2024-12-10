@@ -210,4 +210,3 @@ module PartTwo =
         readTextFromFile @"Days/Day06/input.txt"
         |> parseAndSolve
         |> should equal 1812 
-

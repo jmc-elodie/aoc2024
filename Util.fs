@@ -67,6 +67,16 @@ module ParseInput =
         inputStr
         |> strings
         |> List.map parseLine
+        
+    // Parses an input string into a list of int64 arrays
+    let int64Array (inputStr: string) : int64 array list =
+        let parseLine (s:string) =
+            Regex.Split(s, @"\s+")
+            |> Array.map Int64.Parse
+            
+        inputStr
+        |> strings
+        |> List.map parseLine
 
     let charArray2D (inputStr: string) : char[,] =
         let parseLine (s:string) = s.ToCharArray()
