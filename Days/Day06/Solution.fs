@@ -22,26 +22,37 @@ let exampleInput =
 module Game =
     
     type Position = (int * int)
-    type Board = (char[,] * Set<(int*int)>)
     type Direction =
         | Up
         | Left
         | Right
         | Down
         
-    type PlayingState = { position: Position; direction: Direction; board: Board }
+    type Board = char[,]
+    type History = Set<Position * Direction>
+ 
+    type PlayingState = { position: Position; direction: Direction; board: Board; history: History }
+    type DoneState = { board: Board; history: History }
        
     type GameState =
         | Playing of PlayingState
-        | Done of Board
+        | Done of DoneState
+        | Loop
     
     let move (state: GameState) : GameState =
         match state with
+        | Loop -> state
         | Done _ -> state // If we move an already Done game state, then just return it and noop
         | Playing playingState ->
-    
-        let { position = (x, y); direction = dir; board = (board, xs) } = playingState
+     
+        let { position = (x, y); direction = dir; board = board; history = hist } = playingState
         
+        let posAndDir = ((x, y), dir)
+     
+        if Set.contains posAndDir hist then
+            Loop
+        else
+         
         let dx, dy =
             match dir with
             | Up -> 0, -1
@@ -50,15 +61,12 @@ module Game =
             | Down -> 0, 1
                 
         let nx, ny = (x + dx, y + dy)
-      
-        let updatedXs = Set.add (x, y) xs
-        let boardWithX = (board, updatedXs)
-        
+        let hist = Set.add posAndDir hist
         let isNextOnBoard = Array2DExt.inBounds nx ny board
        
         // If the next position is off the board, then we're done 
         if not isNextOnBoard then
-            Done boardWithX
+            Done { board = board; history = hist }
         else
       
         if board[nx, ny] = '#' then
@@ -71,37 +79,39 @@ module Game =
             
             Playing { playingState with direction = turnRight }
         else
-            Playing { playingState with board = boardWithX; position = (nx, ny) }
+            Playing { playingState with position = (nx, ny); history = hist }
        
-    let getBoard = function
-        | Done b -> b
-        | Playing { board = b } -> b
-       
-    let getBoardWithXs (state: GameState) =
-        let (board, xs) = getBoard state
+    let getBoardAndHistory = function
+        | Done { board = b; history = h } -> b, h
+        | Playing { board = b; history = h } -> b, h
+        | _ -> failwith "getBoardAndHistory: invalid game state"
             
-        let updatedBoard = Array2D.copy board
-        
-        xs |> Set.iter (fun (x,y) -> Array2D.set updatedBoard x y 'X')
-        updatedBoard
-       
     let getDirection = function
         | Done _ -> "N/A"
         | Playing ps -> sprintf "%A" ps.direction
+        | _ -> failwith "getBoardAndHistory: invalid game state"
         
     let countXs (state: GameState) =
-        match state with
-        | Done (_, xs) -> Set.count xs
-        | _ -> failwith $"invalid state to count Xs %A{state}"
+        state
+        |> getBoardAndHistory
+        |> snd
+        |> Set.map fst
+        |> Set.count
             
     let debugPrint (state: GameState) =
+        let getBoardWithXs (state: GameState) =
+            let board, hist = getBoardAndHistory state
+            let board = Array2D.copy board
+            
+            hist |> Set.iter (fun ((x,y), _) -> Array2D.set board x y 'X')
+            board
+       
         let fixPrintOrientation = Array2DExt.transpose >> Array2DExt.transpose >> Array2DExt.transpose
         let board = getBoardWithXs state |> fixPrintOrientation
-        let (_, xs) = getBoard state
-        printfn $"move: %s{getDirection state}\nnum:%d{countXs state}\nxs: %A{xs}{{xs}}\n%A{board}"
+        let (_, hist) = getBoardAndHistory state
+        printfn $"move: %s{getDirection state}\ncount:%d{countXs state}\nxs: %A{hist}\n%A{board}"
     
     let fromString =
-        
         let caretToDirection c : Option<Direction> =
             match c with
             | '^' -> Some Up
@@ -119,7 +129,8 @@ module Game =
             GameState.Playing {
                 position = position
                 direction = direction
-                board = (board, Set.empty)
+                board = board
+                history = Set.empty 
             }
             
         ParseInput.charArray2D >> Array2DExt.transpose >> arrayToState
@@ -131,9 +142,10 @@ module PartOne =
         
     [<TailCall>] 
     let rec moveUntilDone (state: GameState) =
-        // debugPrintState state
+        Game.debugPrint state
         
         match state with
+        | Loop -> state
         | Done _ -> state
         | Playing _ ->
             
@@ -160,6 +172,7 @@ module PartOne =
 module PartTwo =
    
     let solve (board: char[,]) =
+        0        
         
         
     let parseAndSolve = ParseInput.charArray2D >> Array2DExt.transpose >> solve
