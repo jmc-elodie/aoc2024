@@ -26,6 +26,7 @@ let getValueOrFail (res: Result<'T, 'TError>) : 'T =
     | Error err -> failwith $"Result was error: %s{err.ToString()}"
 
 let uncurry f (a,b) = f a b
+let uncurry3 f (a,b,c) = f a b c
 
 let rec permuteN (n: int) (set: 'a list) : 'a list list =
     assert (n >= 0)

@@ -31,7 +31,7 @@ module Game =
     type Board = char[,]
     type History = Set<Position * Direction>
  
-    type PlayingState = { position: Position; direction: Direction; board: Board; history: History }
+    type PlayingState = { position: Position; direction: Direction; board: Board; history: History; obstacle: Position option }
     type DoneState = { board: Board; history: History }
        
     type GameState =
@@ -45,10 +45,11 @@ module Game =
         | Done _ -> state // If we move an already Done game state, then just return it and noop
         | Playing playingState ->
      
-        let { position = (x, y); direction = dir; board = board; history = hist } = playingState
+        let { position = (x, y); direction = dir; board = board; history = hist; obstacle = obs } = playingState
         
         let posAndDir = ((x, y), dir)
-     
+    
+        // If the history contains the same position and direction, we are retracing our steps and thus in a loop 
         if Set.contains posAndDir hist then
             Loop
         else
@@ -69,7 +70,7 @@ module Game =
             Done { board = board; history = hist }
         else
       
-        if board[nx, ny] = '#' then
+        if board[nx, ny] = '#' || obs = Some (nx, ny) then
             let turnRight =
                 match dir with
                 | Up -> Right
@@ -86,11 +87,6 @@ module Game =
         | Playing { board = b; history = h } -> b, h
         | _ -> failwith "getBoardAndHistory: invalid game state"
             
-    let getDirection = function
-        | Done _ -> "N/A"
-        | Playing ps -> sprintf "%A" ps.direction
-        | _ -> failwith "getBoardAndHistory: invalid game state"
-        
     let countXs (state: GameState) =
         state
         |> getBoardAndHistory
@@ -99,6 +95,11 @@ module Game =
         |> Set.count
             
     let debugPrint (state: GameState) =
+        let getDirectionStr = function
+            | Done _ -> "N/A"
+            | Playing ps -> $"%A{ps.direction}"
+            | _ -> failwith "getDirection: invalid game state"
+        
         let getBoardWithXs (state: GameState) =
             let board, hist = getBoardAndHistory state
             let board = Array2D.copy board
@@ -109,7 +110,7 @@ module Game =
         let fixPrintOrientation = Array2DExt.transpose >> Array2DExt.transpose >> Array2DExt.transpose
         let board = getBoardWithXs state |> fixPrintOrientation
         let (_, hist) = getBoardAndHistory state
-        printfn $"move: %s{getDirection state}\ncount:%d{countXs state}\nxs: %A{hist}\n%A{board}"
+        printfn $"move: %s{getDirectionStr state}\ncount:%d{countXs state}\nxs: %A{hist}\n%A{board}"
     
     let fromString =
         let caretToDirection c : Option<Direction> =
@@ -130,29 +131,28 @@ module Game =
                 position = position
                 direction = direction
                 board = board
-                history = Set.empty 
+                history = Set.empty
+                obstacle = None 
             }
             
         ParseInput.charArray2D >> Array2DExt.transpose >> arrayToState
         
-        
-module PartOne =
-    
-    open Game 
-        
     [<TailCall>] 
     let rec moveUntilDone (state: GameState) =
-        Game.debugPrint state
+        // Game.debugPrint state
         
         match state with
-        | Loop -> state
+        | Loop
         | Done _ -> state
         | Playing _ ->
             
         move state
         |> moveUntilDone
         
-    let solve = moveUntilDone >> countXs
+        
+module PartOne =
+    
+    let solve = Game.moveUntilDone >> Game.countXs
      
     let parseAndSolve = Game.fromString >> solve
         
@@ -170,17 +170,44 @@ module PartOne =
 
     
 module PartTwo =
+    open Nessos.Streams
+    
+    let playingOrFail = function
+        | Game.Playing s -> s
+        | _ -> failwithf "playingOrFail: invalid state, not in playing state"
    
-    let solve (board: char[,]) =
-        0        
+    let solve (state: Game.GameState) =
+        let ps = playingOrFail state
         
+        let wouldObstacleLoop (x: int) (y: int) (c: char) : bool =
+            if c <> '.' then false else // only care about cells that are .
+                
+            Game.Playing { ps with obstacle = Some (x, y) } // Set this cell as the Obstacle
+            |> Game.moveUntilDone  // Run until we either finish or loop
+            |> (function
+                | Game.Loop -> true
+                | _ -> false)
+            
+        let mapper (x, y, c) = if (wouldObstacleLoop x y c) then 1 else 0
+            
+        ps.board
+        |> Array2DExt.toSeq
+        |> ParStream.ofSeq
+        |> ParStream.map mapper
+        |> ParStream.sum
         
-    let parseAndSolve = ParseInput.charArray2D >> Array2DExt.transpose >> solve
+    let parseAndSolve = Game.fromString >> solve
     
     [<Test>]
     let ``example input``() =
         exampleInput
         |> parseAndSolve
         |> tee (printfn "%A")
-        |> should equal 2
+        |> should equal 6
         
+    // [<Test>] // skip this test b/c it takes 1.5 minutes to run
+    let ``problem input``() =
+        readTextFromFile @"Days/Day06/input.txt"
+        |> parseAndSolve
+        |> should equal 1812 
+

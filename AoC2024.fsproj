@@ -19,6 +19,7 @@
         </PackageReference>
         <PackageReference Include="NUnit3TestAdapter" Version="5.0.0-beta.5" />
         <PackageReference Update="FSharp.Core" Version="9.0.100" />
+        <PackageReference Include="Streams" Version="0.6.0" />
     </ItemGroup>
 
     <ItemGroup>
