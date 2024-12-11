@@ -100,17 +100,15 @@ module Game =
             | Playing ps -> $"%A{ps.direction}"
             | _ -> failwith "getDirection: invalid game state"
         
-        let getBoardWithXs (state: GameState) =
-            let board, hist = getBoardAndHistory state
-            let board = Array2D.copy board
+        let board, hist = getBoardAndHistory state
+        printfn $"move: %s{getDirectionStr state}\ncount:%d{countXs state}\nxs: %A{hist}"
+        
+        let boardWithXs = 
+            hist 
+            |> Set.map fst
+            |> CharGrid.withOverlay board 'X'
             
-            hist |> Set.iter (fun ((x,y), _) -> Array2D.set board x y 'X')
-            board
-       
-        let fixPrintOrientation = Array2DExt.transpose >> Array2DExt.transpose >> Array2DExt.transpose
-        let board = getBoardWithXs state |> fixPrintOrientation
-        let (_, hist) = getBoardAndHistory state
-        printfn $"move: %s{getDirectionStr state}\ncount:%d{countXs state}\nxs: %A{hist}\n%A{board}"
+        CharGrid.debugPrint boardWithXs
     
     let fromString =
         let caretToDirection c : Option<Direction> =

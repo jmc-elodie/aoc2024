@@ -141,7 +141,7 @@ module Array2DExt =
         let arrCopy = Array2D.copy arr
         Array2D.set arrCopy x y v
         arrCopy
-            
+           
 module SeqExt =
     
     // Given a sequence of bools, counts the number of true elements
@@ -211,3 +211,19 @@ module Graph =
         input
         |> Seq.fold dfs (Set.empty, [])
         |> snd
+ 
+module CharGrid = 
+
+    type CharGrid = char[,]
+    
+    let fromString = ParseInput.charArray2D >> Array2DExt.transpose
+    
+    let withOverlay (grid: CharGrid) (c: char) (points: (int * int) seq) : CharGrid =
+        let newGrid = Array2D.copy grid
+        points |> Seq.iter (fun (x, y) -> Array2D.set newGrid x y c)
+        newGrid
+
+    let debugPrint (grid: CharGrid) : unit =
+        let fixPrintOrientation = Array2DExt.transpose
+        grid |> fixPrintOrientation |> printfn "%A" 
+        
