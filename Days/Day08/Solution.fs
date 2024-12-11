@@ -64,40 +64,50 @@ module PartOne =
        
         
 module PartTwo = 
-
-    let nodesFromSlope (width, height) (m: float, b: float) : (int * int) seq =
-        let isOnLine (x: int, y: int) = 
-            Math.Abs((float y) - (m * (float x) + b)) < 0.0001 // if it satisfies y-intercept form...
-            
-        Seq.allPairs [ 0..(width - 1) ] [ 0..(height - 1) ]
-        |> Seq.filter isOnLine
         
     let solve (arr: char[,]) : int =
+        // Convert two points into a line represented by a slope and y-intercept
         let lineFromTwoAntennae ((ax: int, ay: int), (bx: int, by: int)) : (float * float) =
             let dx, dy = (bx - ax, by - ay)
             let m: float = (float dy) / (float dx)
-            let b: float = m * (float ax) - (float ay)
-            (m, b)
-            
+            let b: float = -m * (float ax) + (float ay)
+            (m, b) // y = mx + b
+           
+        // Given a list of points of like antennae, make a line from every pair of points
         let antennaeToLines (locs: (int * int) seq) : (float * float) seq =
             Seq.allPairs locs locs 
             |> Seq.filter (fun (a, b) -> a <> b)
             |> Seq.map lineFromTwoAntennae
             
-        arr
-        |> findAntennae  // all antennae
-        |> Seq.collect antennaeToLines // lines made by all pairs of like frequency
-        |> Seq.distinct
-        |> Seq.collect (nodesFromSlope (Array2DExt.dims arr)) // all nodes on those lines in bounds
-        |> Seq.distinct
-        |> tee (CharGrid.withOverlay arr '#' >> CharGrid.debugPrint)
-        |> Seq.length // the number of distinct nodes
+        let lines =
+            arr
+            |> findAntennae  // all antennae
+            |> Seq.collect antennaeToLines // lines made by all pairs of like frequency
+            |> Seq.distinct
+      
+        // True if a point is on any line 
+        let isOnAnyLine (x: int, y: int) : bool =
+            let isOnLine (m, b) = 
+                Math.Abs((float y) - (m * (float x) + b)) < 0.0001 // if it satisfies y=mx+b
+                
+            lines |> Seq.exists isOnLine
+      
+        // Check each grid coordinate to see if it exists on any of the lines
+        Array2DExt.coords arr
+        |> Seq.filter isOnAnyLine
+        |> Seq.length 
        
-    let parseAndSolve = ParseInput.charArray2D >> Array2DExt.transpose >> tee CharGrid.debugPrint >> solve
+    let parseAndSolve = ParseInput.charArray2D >> Array2DExt.transpose >> solve
         
     [<Test>]
     let ``example input``() =
         exampleInput
         |> parseAndSolve
         |> should equal 34
+        
+    [<Test>]
+    let ``problem input``() =
+        readTextFromFile @"Days/Day08/input.txt"
+        |> parseAndSolve
+        |> should equal 934
         

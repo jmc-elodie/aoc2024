@@ -141,7 +141,11 @@ module Array2DExt =
         let arrCopy = Array2D.copy arr
         Array2D.set arrCopy x y v
         arrCopy
-           
+        
+    let coords (arr: 'T[,]) = 
+        let (width, height) = dims arr
+        Seq.allPairs [ 0..(width - 1) ] [ 0..(height - 1) ]
+        
 module SeqExt =
     
     // Given a sequence of bools, counts the number of true elements
