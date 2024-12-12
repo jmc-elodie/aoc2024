@@ -67,6 +67,11 @@
       </Content>
       <Content Include="Days\Day08\Problem.md" />
       <Compile Include="Days\Day08\Solution.fs" />
+      <Content Include="Days\Day09\input.txt">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="Days\Day09\Problem.md" />
+      <Compile Include="Days\Day09\Solution.fs" />
       <Compile Include="Program.fs" />
       <Content Include="Readme.md" />
     </ItemGroup>
