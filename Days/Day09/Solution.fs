@@ -1,17 +1,10 @@
 ﻿module AoC2024.Days.Day09.Solution
 
-open System
 open NUnit.Framework
 open FsUnit
 open AoC2024.Util
 
 let exampleInput = "2333133121414131402"
-
-let atoi c = $"%c{c}" |> Int32.Parse
-
-let parseInts (str: string) : int seq =
-    str |> ParseInput.strings |> List.head |> (_.ToCharArray()) |> Seq.map atoi
-    
     
 type DiskMapItem =
     | File of (int * int)
@@ -19,7 +12,7 @@ type DiskMapItem =
     
 let parseDiskMap (str: string) : DiskMapItem list =
     str
-    |> parseInts
+    |> ParseInput.intString
     |> Seq.mapi (fun i v -> (i, v))
     |> Seq.map (function
         | i, n when (i % 2 = 0) -> File (i / 2, n)
@@ -28,8 +21,8 @@ let parseDiskMap (str: string) : DiskMapItem list =
 
 module PartOne =
     
-    let defragAndExpand (diskMap: DiskMapItem list) : int seq =
-        
+    let defragBlocks (diskMap: DiskMapItem list) : int seq =
+       
         let rec inner (diskMap: DiskMapItem list) (reversedFileBlocks: DiskMapItem list) : int seq =
             seq {
                 match diskMap, reversedFileBlocks with
@@ -54,7 +47,7 @@ module PartOne =
                     yield idx
                     yield! inner (File (idx, n - 1) :: remainingDiskMap) reversedFileBlocks
                 
-                // if the head of the map is a free block, consume it with a file from the end
+                // if the head of the map is a free block, consume it with a file from the end and recurse
                 | (Free freeN :: remainingDiskMap), (File (idx, fileN) :: remainingFiles) ->
                     yield idx
                     yield! inner (Free (freeN - 1) :: remainingDiskMap) (File (idx, fileN - 1) :: remainingFiles)
@@ -70,12 +63,10 @@ module PartOne =
         
         inner diskMap reversedFiles
     
-    let solve (diskMap: DiskMapItem list) : int64 =
-        diskMap
-        |> defragAndExpand
-        |> tee (printfn "%A")
-        |> Seq.mapi (fun i n -> int64 (i * n))
-        |> Seq.sum
+    let solve =
+        defragBlocks
+        >> Seq.mapi (fun i n -> int64 (i * n))
+        >> Seq.sum
         
     let parseAndSolve = parseDiskMap >> solve
     
@@ -89,5 +80,23 @@ module PartOne =
     let ``problem input``() =
         readTextFromFile @"Days/Day09/input.txt"
         |> parseAndSolve
-        |> tee (printfn "%A")
         |> should equal 6471961544878L
+
+module PartTwo =
+ 
+    // Given a disk map, emit a stream of file ids, counts, and offsets representing defragmented files 
+    let defragFiles (diskMap: DiskMapItem list) : (int * int * int) seq =
+        0
+     
+    let solve =
+        defragFiles
+        >> Seq.map (fun (idx, n, offset) -> int64 (idx * n * offset))
+        >> Seq.sum
+        
+    let parseAndSolve = parseDiskMap >> solve
+    
+    [<Test>]
+    let ``example input``() =
+        exampleInput
+        |> parseAndSolve
+        |> should equal 2858

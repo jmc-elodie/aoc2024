@@ -95,6 +95,12 @@ module ParseInput =
         
         Array2D.init numLines rowLen (fun y x -> lines[y][x])
         
+    let atoi c = $"%c{c}" |> Int32.Parse
+
+    // Parses an input string like 12345... into a sequence of ints like [ 1; 2; 3; 4; 5; ... ]
+    let intString (str: string) : int seq =
+        str |> strings |> List.head |> (_.ToCharArray()) |> Seq.map atoi
+        
 module Array2DExt =
 
     let foldi (folder: 'TState -> int -> int -> 'T -> 'TState) (state: 'TState) (arr: 'T[,]) : 'TState =
