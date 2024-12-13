@@ -87,57 +87,6 @@ module PartOne =
 
 module PartTwo =
  
-    // Given a disk map, emit a stream of file ids, and offsets representing defragmented files 
-    // let defragFiles (diskMap: DiskMapItem list) : (int * int) seq =
-    //   
-    //     let defragOneFile (diskMap: DiskMapItem list) (fileIdx: int, file: DiskMapItem) =
-    //         let (File (_, fileSize)) = file
-    //         
-    //         let res =
-    //             diskMap
-    //             |> Seq.take fileIdx
-    //             |> Seq.indexed
-    //             |> Seq.tryFind(function
-    //                 | _, Free n -> n >= fileSize
-    //                 | _ -> false)
-    //    
-    //         match res with
-    //         | None -> diskMap
-    //         
-    //         | Some (i, Free n) when n = fileSize ->
-    //             diskMap
-    //             |> List.updateAt fileIdx (Free n)
-    //             |> List.updateAt i file
-    //             
-    //         | Some (i, Free n) ->
-    //             diskMap
-    //             |> List.updateAt fileIdx (Free fileSize)
-    //             |> List.updateAt i (Free (n - fileSize))
-    //             |> List.insertAt i file
-    //         
-    //         
-    //     let expandBlock (offset: int) (block: DiskMapItem) : ((int * int) seq * int) =
-    //         let idx, n =
-    //             match block with
-    //             | File (idx, n) -> idx, n
-    //             | Free n -> 0, n
-    //         
-    //         let blocks =
-    //             [0..(n-1)]
-    //             |> Seq.map (fun i -> (idx, offset + i))
-    //         
-    //         (blocks, offset + n)
-    //     
-    //     diskMap
-    //     |> Seq.indexed
-    //     |> Seq.filter (snd >> isFile)
-    //     |> Seq.rev
-    //     |> Seq.fold defragOneFile diskMap
-    //     |> Seq.mapFold expandBlock 0
-    //     |> fst
-    //     |> Seq.concat
-    //
-    
     let defragFiles (diskMap: DiskMapItem list) : (int * int) seq =
       
         let rec inner (diskMap: DiskMapItem list) =

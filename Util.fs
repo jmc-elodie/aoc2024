@@ -151,6 +151,11 @@ module Array2DExt =
     let coords (arr: 'T[,]) = 
         let (width, height) = dims arr
         Seq.allPairs [ 0..(width - 1) ] [ 0..(height - 1) ]
+       
+    let findIndexesOf (value: 'T) = 
+        toSeq
+        >> Seq.filter (fun (_, _, v) -> v = value)
+        >> Seq.map (fun (x, y, _) -> (x, y))
         
 module SeqExt =
     
