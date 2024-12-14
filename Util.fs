@@ -183,6 +183,8 @@ module SeqExt =
               for j = b2 to b2 + count2 - 1 do
                   yield arr[i,j]
         }
+        
+    let foldTimes n f s = Seq.fold (fun s _ -> f s) s [1..n]
 
 module Tuple =
     

@@ -8,9 +8,9 @@ open FsUnit
 
 let exampleInput = "125 17"
 
-module PartOne =
+module PartOneAndTwo =
     
-    let solve (stones: string list) : int64 =
+    let solve (numBlinks: int) (stones: string list) : int64 =
         
         let hasEvenDigits (n: string) = (n.Length % 2) = 0
         
@@ -29,40 +29,34 @@ module PartOne =
             | n when (hasEvenDigits n) -> splitStone n
             | n -> [ mulString 2024L n ]
            
-        // let mutable memo: Map<string, string list> = Map.empty
-        // let memoize f n =
-        //     match (Map.tryFind n memo) with
-        //     | Some a -> a
-        //     | None -> 
-        //         let result = f n
-        //         memo <- Map.add n result memo
-        //         result
-        
-        let updateOneStoneMap (input: Map<string, int64>) (n: string) : Map<string, int64> =
-            let curCount = Map.find n input
-            let updateCountMap m n = Map.change n (fun x -> Some ((Option.defaultValue 0L x) + curCount)) m
-            updateOneStone n |> Seq.fold updateCountMap (Map.remove n input)
+        let updateOneStoneMap (input: Map<string, int64>) (n: string) (count: int64) : Map<string, int64> =
+            let updateCountMap m n = Map.change n (fun x -> Some ((Option.defaultValue 0L x) + count)) m
+            updateOneStone n |> Seq.fold updateCountMap input
                
-        let blink (stones: Map<string, int64>)  = 
-            stones |> Map.keys |> Seq.fold updateOneStoneMap stones
+        let blink = Map.fold updateOneStoneMap Map.empty
       
-        let stones = "1036288 7 2 20 24 4048 1 4048 8096 28 67 60 32" |> ParseInput.words |> List.head
+        stones
+        |> Seq.fold (fun m n -> Map.add n 1L m) Map.empty // Convert stone list into count map
+        |> SeqExt.foldTimes numBlinks blink  // blink n times
+        |> Map.values // get the counts and sum them
+        |> Seq.sum
        
-        let stonesMap = stones |> Seq.fold (fun m n -> Map.add n 1L m) Map.empty
-        
-        // [1..25] |> Seq.fold (fun s _ -> blink s) stonesMap |> Map.values |> Seq.sum
-        blink stonesMap |> Map.values |> Seq.sum
-       
-    let parseAndSolve = ParseInput.words >> List.head >> solve
+    let parseAndSolve n = ParseInput.words >> List.head >> solve n
         
     [<Test>]
-    let ``example input``() =
+    let ``p1: example input``() =
         exampleInput
-        |> parseAndSolve
+        |> parseAndSolve 25
         |> should equal 55312
         
     [<Test>]
-    let ``problem input``() =
+    let ``p1: problem input``() =
         readTextFromFile @"Days/Day11/input.txt"
-        |> parseAndSolve
+        |> parseAndSolve 25
         |> should equal 229043
+        
+    [<Test>]
+    let ``p2: problem input``() =
+        readTextFromFile @"Days/Day11/input.txt"
+        |> parseAndSolve 75
+        |> should equal 272673043446478L
