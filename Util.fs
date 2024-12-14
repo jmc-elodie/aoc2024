@@ -47,6 +47,13 @@ module ParseInput =
         inputStr.Trim().Split("\n") 
         |> Array.toList
         |> List.map (_.Trim())
+        
+    
+    let words (inputStr: string) : string list list =
+        let parseLine (s: string) = Regex.Split(s, @"\s+") |> Array.toList
+        
+        strings inputStr    
+        |> List.map parseLine 
       
     // Parses an input string into 2 int32 columns and returns a tuple of those columns as lists
     let intCols2 (inputStr: string) : int list * int list =
