@@ -164,6 +164,18 @@ module Array2DExt =
         >> Seq.filter (fun (_, _, v) -> v = value)
         >> Seq.map (fun (x, y, _) -> (x, y))
         
+    let filterNeighbors (f: 'T -> bool) (x: int, y: int) (arr: 'T[,]) : ((int * int) * 'T) seq = 
+        let checkNeighbor (cx: int, cy: int) : ((int * int) * 'T) option =
+            let x, y = x + cx, y + cy
+            if (inBounds x y arr) then
+                let v = arr[x, y]
+                if (f v) then Some ((x, y), v) else None
+            else
+                None
+            
+        [ (-1, 0); (1, 0); (0, -1); (0, 1) ]
+        |> Seq.choose checkNeighbor 
+    
 module SeqExt =
     
     // Given a sequence of bools, counts the number of true elements
@@ -196,6 +208,8 @@ module Tuple =
         
     let toArray2 (x: 'a, y: 'a) =
         [| x; y |]
+        
+    let add (ax, ay) (bx, by) = (ax + bx, ay + by)
         
         
 // Utilities for creating and sorting a directed graph of values
@@ -250,4 +264,3 @@ module CharGrid =
     let debugPrint (grid: CharGrid) : unit =
         let fixPrintOrientation = Array2DExt.transpose
         grid |> fixPrintOrientation |> printfn "%A" 
-        

@@ -21,16 +21,7 @@ let parseTrailMap = CharGrid.fromString >> Array2D.map ParseInput.atoi
 module PartOne =
     
     let solve (trailMap: int[,]) : int =
-        let isValidLoc x y = Array2DExt.inBounds x y trailMap
         
-        // Check the neighbor and return Some (x,y) if they are the desired value 
-        let checkNeighbor h (cx, cy) (rx, ry) : (int * int) option =
-            let x, y = cx + rx, cy + ry
-            if (isValidLoc x y) && (trailMap[x, y] = h) then
-                Some (x, y)
-            else
-                None
-               
         let rec findNinesOnPath (x: int, y: int) : (int * int) seq =
             seq {
                 let h = trailMap[x, y]
@@ -40,8 +31,9 @@ module PartOne =
                 else
                     
                 yield!
-                    [ (-1, 0); (1, 0); (0, -1); (0, 1) ]
-                    |> Seq.choose (checkNeighbor (h + 1) (x, y))
+                    trailMap
+                    |> Array2DExt.filterNeighbors (fun v -> v = h + 1) (x, y)
+                    |> Seq.map fst
                     |> Seq.collect findNinesOnPath
             }
         
