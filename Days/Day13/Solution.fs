@@ -46,9 +46,9 @@ let exampleInput =
 // X = 80, Y = 40
 
 type Machine = {
-    A: (float * float)
-    B: (float * float)
-    P: (float * float)
+    A: (decimal * decimal)
+    B: (decimal * decimal)
+    P: (decimal * decimal)
 }
 
 let parseMachines (str: string) =
@@ -64,11 +64,11 @@ let parseMachines (str: string) =
                 m, [ 1; 2 ]
             
         indexes
-        |> Seq.map (fun i -> Int32.Parse(m.Groups[i].Value) |> float)
+        |> Seq.map (fun i -> Decimal.Parse(m.Groups[i].Value))
         |> Seq.toArray
         |> Tuple.ofArray2
    
-    let toMachine (nums: (float * float) array) : Machine =
+    let toMachine (nums: (decimal * decimal) array) : Machine =
         assert (nums.Length = 3)
         {
             A = nums[0]
@@ -84,35 +84,53 @@ let parseMachines (str: string) =
     |> Seq.map toMachine
 
 
+let solve (offset: decimal) (maxPresses: decimal) (machines: Machine seq) : int64 =
+    let solveMachine (m: Machine) : (int64 * int64) option =
+        let isInt (n: decimal) = (abs (n - (round n))) < 0.00001m
+        let { A=(ax,ay); B=(bx,by); P=(px,py) } = m
+        let px = px + offset
+        let py = py + offset
+        let X = (py/ by - px/bx) / (ay/by - ax/bx)
+        let Y = (px - ax * X) / bx
+        if (isInt X) && (isInt Y) && X > 0.0m && Y > 0.0m && X <= maxPresses && Y <= maxPresses then
+            Some (int64 (round X), (int64 (round Y)))
+        else
+            None
+    
+    machines
+    |> Seq.choose solveMachine
+    |> Seq.map (fun (a, b) -> 3L * a + b)
+    |> Seq.sum
+
+
 module PartOne =
 
-    let solve (machines: Machine seq) : int =
-        let solveMachine (m: Machine) : (int * int) option =
-            let isInt (f: float) = (abs (f - (round f))) < 0.00001
-            let { A=(ax,ay); B=(bx,by); P=(px,py) } = m
-            let X = (py/ by - px/bx) / (ay/by - ax/bx)
-            let Y = (px - ax * X) / bx
-            if (isInt X) && (isInt Y) && X > 0.0 && X <= 100.0 && Y > 0.0 && Y <= 100.0 then
-                Some (int (round X), (int (round Y)))
-            else
-                None
-        
-        machines
-        |> Seq.choose solveMachine
-        |> Seq.map (fun (a, b) -> 3 * a + b)
-        |> Seq.sum
- 
-    let parseAndSolve = parseMachines >> solve
-
+    let parseAndSolve = parseMachines >> solve 0m 100m
+    
     [<Test>]
     let ``example input``() =
         exampleInput
         |> parseAndSolve
-        |> should equal 480
+        |> should equal 480L
 
     [<Test>]
     let ``problem input``() =
         readTextFromFile @"Days/Day13/input.txt"
         |> parseAndSolve
-        |> should equal 37901
+        |> should equal 37901L
 
+module PartTwo =
+
+    let parseAndSolve = parseMachines >> solve 10000000000000m 10000000000000m
+    
+    [<Test>]
+    let ``example input``() =
+        exampleInput
+        |> parseAndSolve
+        |> should equal 875318608908L
+
+    [<Test>]
+    let ``problem input``() =
+        readTextFromFile @"Days/Day13/input.txt"
+        |> parseAndSolve
+        |> should equal 77407675412647L
