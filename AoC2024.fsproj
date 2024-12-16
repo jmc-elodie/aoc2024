@@ -88,6 +88,10 @@
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
       <Compile Include="Days\Day13\Solution.fs" />
+      <Content Include="Days\Day14\input.txt">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Compile Include="Days\Day14\Solution.fs" />
       <Compile Include="Program.fs" />
       <Content Include="Readme.md" />
     </ItemGroup>
