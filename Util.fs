@@ -263,4 +263,8 @@ module CharGrid =
 
     let debugPrint (grid: CharGrid) : unit =
         let fixPrintOrientation = Array2DExt.transpose
-        grid |> fixPrintOrientation |> printfn "%A" 
+        grid |> fixPrintOrientation |> printfn "%A"
+        
+module SetExt =
+    
+    let without (other: Set<'a>) (s: Set<'a>) = Set.difference s other
