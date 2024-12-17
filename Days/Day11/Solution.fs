@@ -1,7 +1,6 @@
 ﻿module AoC2024.Days.Day11.Solution
 
 open System
-open System.Collections.Generic
 open AoC2024.Util
 open NUnit.Framework
 open FsUnit
