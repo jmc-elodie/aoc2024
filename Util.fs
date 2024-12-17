@@ -263,13 +263,11 @@ module CharGrid =
         newGrid
 
     let debugPrint (grid: CharGrid) : unit =
-        // let fixPrintOrientation = Array2DExt.transpose
-        // grid |> fixPrintOrientation |> printfn "%A"
         let width, height = Array2DExt.dims grid
         for y = 0 to (height - 1) do
             [0..(width - 1)] 
             |> Seq.map (fun x -> grid[x,y]) 
-            |> Seq.fold (fun (sb: StringBuilder) c -> sb.Append c) (StringBuilder()) 
+            |> Seq.fold (fun (sb: StringBuilder) -> sb.Append) (StringBuilder()) 
             |> _.ToString() 
             |> printfn "%s"
             
