@@ -101,13 +101,20 @@ module ParseInput =
         let rowLen = lines[0].Length
         assert (rowLen > 0)
         
-        Array2D.init numLines rowLen (fun y x -> lines[y][x])
+        Array2D.init rowLen numLines (fun x y -> lines[y][x])
         
     let atoi c = $"%c{c}" |> Int32.Parse
 
     // Parses an input string like 12345... into a sequence of ints like [ 1; 2; 3; 4; 5; ... ]
     let intString (str: string) : int seq =
         str |> strings |> List.head |> (_.ToCharArray()) |> Seq.map atoi
+    
+    let split (str: string) : (string * string) =
+        let p = str.Trim().ReplaceLineEndings().Split(Environment.NewLine + Environment.NewLine, 2) |> Array.map (_.Trim())
+        (p[0], p[1])
+    
+    let charSeq (str: string) : (char seq) =
+        str.Trim().ToCharArray() |> Array.toSeq |> Seq.filter (Char.IsWhiteSpace >> not)
         
 module Array2DExt =
 
@@ -254,6 +261,7 @@ module Graph =
 module CharGrid = 
 
     type CharGrid = char[,]
+    type Direction = U | L | R | D
     
     let fromString = ParseInput.charArray2D >> Array2DExt.transpose
     
@@ -270,7 +278,24 @@ module CharGrid =
             |> Seq.fold (fun (sb: StringBuilder) -> sb.Append) (StringBuilder()) 
             |> _.ToString() 
             |> printfn "%s"
+   
+    // Does an in-place swap of values between two points 
+    let swap (grid: CharGrid) (ax, ay) (bx, by) =
+        let temp = grid[ax, ay]
+        grid[ax, ay] <- grid[bx, by]
+        grid[bx, by] <- temp
+        
+    let next (grid: CharGrid) (pos: (int * int)) (m: Direction) : (char * (int * int)) =
+        let delta =
+            match m with
+            | L -> (-1, 0)
+            | R -> (1, 0)
+            | U -> (0, -1)
+            | D -> (0, 1)
             
+        let newPos = Tuple.add pos delta
+        let c = newPos ||> Array2D.get grid
+        c, newPos
         
 module SetExt =
     
