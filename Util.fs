@@ -29,6 +29,8 @@ let getValueOrFail (res: Result<'T, 'TError>) : 'T =
 let uncurry f (a,b) = f a b
 let uncurry3 f (a,b,c) = f a b c
 
+let inline (%!) a b = (a % b + b) % b
+   
 let rec permuteN (n: int) (set: 'a list) : 'a list list =
     assert (n >= 0)
     match n, set with
@@ -158,6 +160,9 @@ module Array2DExt =
     let findIndex (pred: 'T -> bool) (arr: 'T[,]) : (int * int) =
         arr |> toSeq |> Seq.find (fun (_, _, v) -> pred v) |> fun (x, y, _) -> (x, y)
         
+    let findIndexOf (item: 'T) (arr: 'T[,]) : (int * int) =
+        arr |> toSeq |> Seq.find (fun (_, _, v) -> v = item) |> fun (x, y, _) -> (x, y)
+        
     let setWith (x: int) (y: int) (v: 'T) (arr: 'T[,]) : 'T[,] =
         let arrCopy = Array2D.copy arr
         Array2D.set arrCopy x y v
@@ -218,6 +223,8 @@ module Tuple =
         [| x; y |]
         
     let add (ax, ay) (bx, by) = (ax + bx, ay + by)
+    
+    let sub (ax, ay) (bx, by) = (ax - bx, ay - by)
         
         
 // Utilities for creating and sorting a directed graph of values
@@ -257,13 +264,13 @@ module Graph =
         input
         |> Seq.fold dfs (Set.empty, [])
         |> snd
- 
-module CharGrid = 
+        
+type CharGrid = char[,]
+type Direction = N | W | E | S
 
-    type CharGrid = char[,]
-    type Direction = U | L | R | D
+module CharGrid = 
     
-    let fromString = ParseInput.charArray2D >> Array2DExt.transpose
+    let fromString = ParseInput.charArray2D
     
     let withOverlay (grid: CharGrid) (c: char) (points: (int * int) seq) : CharGrid =
         let newGrid = Array2D.copy grid
@@ -288,10 +295,10 @@ module CharGrid =
     let next (grid: CharGrid) (pos: (int * int)) (m: Direction) : (char * (int * int)) =
         let delta =
             match m with
-            | L -> (-1, 0)
-            | R -> (1, 0)
-            | U -> (0, -1)
-            | D -> (0, 1)
+            | W -> (-1, 0)
+            | E -> (1, 0)
+            | N -> (0, -1)
+            | S -> (0, 1)
             
         let newPos = Tuple.add pos delta
         let c = newPos ||> Array2D.get grid

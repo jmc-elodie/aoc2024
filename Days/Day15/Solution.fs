@@ -4,8 +4,6 @@ open AoC2024.Util
 open NUnit.Framework
 open FsUnit
 
-open AoC2024.Util.CharGrid
-
 let exampleInput =
     """
     ##########
@@ -41,10 +39,10 @@ let parseMoves (str: string) : Direction seq =
     str
     |> ParseInput.charSeq
     |> Seq.map (function
-        | '<' -> L
-        | '>' -> R
-        | '^' -> U
-        | 'v' -> D)
+        | '<' -> W
+        | '>' -> E
+        | '^' -> N
+        | 'v' -> S)
     
 let parseWarehouse (str: string) : Warehouse =
     let gridInput, movesInput = ParseInput.split str
@@ -84,7 +82,7 @@ module PartOne =
       
         let push (pos: (int * int)) (m: Direction) : bool =
             let rec findEmpty p =
-                let nc, np = next grid p m
+                let nc, np = CharGrid.next grid p m
                 match nc with
                 | '.' -> Some np
                 | '#' -> None
@@ -102,7 +100,7 @@ module PartOne =
         // # - do nothing
         // O - update pos and push
         let move (pos: (int * int)) (m: Direction) : (int * int) =
-            let nextChar, nextPos = next grid pos m
+            let nextChar, nextPos = CharGrid.next grid pos m
             match nextChar with
             | '.' -> nextPos
             | '#' -> pos
@@ -203,7 +201,7 @@ module PartTwo =
         // Recurse through the pushes to figure out what swaps we need to make and return them as a list of swaps or None for a blocked path 
         let rec stagePush (isPushingNeighbor: bool) (c: char) (pos: (int * int)) (m: Direction) : ((int * int) * (int * int)) list option =
             
-            let shouldPushNeighbor = (not isPushingNeighbor) && (c = '[' || c = ']') && (m = U || m = D)
+            let shouldPushNeighbor = (not isPushingNeighbor) && (c = '[' || c = ']') && (m = N || m = S)
             let pushNeighborResult =
                 if shouldPushNeighbor then
                     let x, y = pos
