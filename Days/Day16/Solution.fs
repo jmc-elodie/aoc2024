@@ -1,6 +1,5 @@
 ﻿module AoC2024.Days.Day16.Solution
 
-open System.Collections.Generic
 open System.Collections.Immutable
 open AoC2024.Util
 open Microsoft.FSharp.Collections
@@ -86,12 +85,18 @@ let dirToPoint (d: Direction) : Point =
     | S -> (0, 1)
     | W -> (-1, 0)
     
-let turnsBetween (a: Direction) (b: Direction) : int =
-    let clockwise = [| N; E; S; W |]
-    let ai = Array.findIndex (fun v -> v = a) clockwise
-    let bi = Array.findIndex (fun v -> v = b) clockwise
-    abs (ai - bi)
+module Direction =
+    let opposite = function
+        | N -> S
+        | W -> E
+        | E -> W
+        | S -> N
     
+    let clockwiseOf = function
+        | N -> E
+        | E -> S
+        | S -> W
+        | W -> N
 module PartOne =
 
     type DistQueue = ImmutableSortedSet<int * Move>
@@ -104,58 +109,48 @@ module PartOne =
             let x, y = p
             grid[x,y]
          
-        let neighbors (pos: Point) : (Direction * Point) seq =
-            [ N; E; S; W ]
-            |> Seq.map (fun d -> d, dirToPoint d)
-            |> Seq.map (fun (d, p) -> d, Tuple.add pos p)
+        let neighbors (facing: Direction) (pos: Point) : (Direction * Point) seq =
+            [ facing; Direction.clockwiseOf facing; Direction.clockwiseOf facing |> Direction.opposite ]
+            |> Seq.map (fun d -> d, dirToPoint d |> Tuple.add pos )
             |> Seq.filter (fun (_, p) -> (charAt p) <> '#')
-       
-        let removeAll (items: (int * Move) seq) (dists: DistQueue) : DistQueue = 
-            items |> Seq.fold (_.Remove) dists
             
         let insertAll (items: (int * Move) seq) (dists: DistQueue) : DistQueue = 
             items |> Seq.fold (_.Add) dists
            
-        let updateAll (updates: (int * Move) seq) (dists: DistQueue) (visited: Map<Move, int>) : DistQueue =
-            let existingItems =
-                updates
-                |> Seq.choose (fun (_, m) ->
-                    match Map.tryFind m visited with
-                    | Some c -> Some (c, m)
-                    | None -> None)
-           
-            let minItems = 
-                updates
-                |> Seq.map (fun (updatedCost, m) ->
-                    let minCost = min updatedCost (Map.tryFind m visited |> Option.defaultValue updatedCost)
-                    minCost, m)
-             
-            dists |> removeAll existingItems |> insertAll minItems
-             
+        let pop (dists: DistQueue) : (int * Move) * DistQueue =
+            let res = dists.Min
+            res, dists.Remove res
+        
+        // Find possible exit states 
+        let exits =
+            // an exit direction is valid if its opposite neighbor is not a #
+            let isValid d = dirToPoint d |> Tuple.sub exit |> charAt |> (fun c -> c <> '#')
+            [ N; S; E; W ] |> List.filter isValid |> List.map (fun d -> d, exit)
+        
         // https://www.geeksforgeeks.org/dijkstras-shortest-path-algorithm-greedy-algo-7/ 
         let rec cheapestPath (dists: DistQueue) (visited: Map<Move, int>) : int =
             let notVisited m = Map.containsKey m visited |> not
             
             // find the lowest cost position that hasn't been visited  
-            let cost, (facing, pos) = dists |> Seq.find (snd >> notVisited)
+            let (cost, (facing, pos)), dists = pop dists
             
-            // If the lowest cost next position is the exit, we're done
-            if pos = exit then cost else
-               
             // Mark this position as visited 
             let visited = Map.add (facing, pos) cost visited
-               
+            
+            let visitedExits = exits |> List.choose (fun m -> Map.tryFind m visited)
+            if visitedExits.Length = exits.Length then
+                List.min visitedExits
+            else
+            
             // Calculate the cost of turning to a point 
-            let turnCost (d: Direction, p: Point) =
-                let turns = turnsBetween facing d
-                turns * 1000
+            let turnCost (d: Direction, _: Point) = if d = facing then 0 else 1000
            
-            // Update dists by... 
-            let dists =
-                neighbors pos // Finding all neighboring positions
+            let updates =
+                neighbors facing pos // Find all neighboring positions
                 |> Seq.filter notVisited // that haven't already been visited
                 |> Seq.map (fun l -> cost + 1 + turnCost l, l) // calculating the cost
-                |> (fun updates -> updateAll updates dists visited) // update the dist tree
+                
+            let dists = insertAll updates dists // update the dist tree
             
             // Recurse to the next thing
             cheapestPath dists visited
@@ -182,6 +177,4 @@ module PartOne =
         readTextFromFile @"Days/Day16/input.txt"
         |> CharGrid.fromString
         |> solve
-        |> should equal 11048
-        
-        // 103432 too high
+        |> should equal 83432 
