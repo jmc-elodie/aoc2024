@@ -1,6 +1,7 @@
 ﻿module AoC2024.Common.Algo.Pathfinding
 
 open System.Collections.Immutable
+open Microsoft.FSharp.Core
 
 type 'TNode DistQueue = ImmutableSortedSet<int * 'TNode>
 type 'TNode PathGraph when 'TNode: comparison = Map<'TNode, int * 'TNode list>
@@ -57,7 +58,11 @@ let shortestPaths (graph: 'TNode -> (int * 'TNode) seq) (start: 'TNode) : 'TNode
     loop (q.Add (0, start)) Set.empty Map.empty
     
     
-let shortestPathDist (graph: 'TNode -> (int * 'TNode) seq) (start: 'TNode) (exit: 'TNode) : int =
+
+let tryShortestDist (graph: 'TNode -> (int * 'TNode) seq) (start: 'TNode) (exit: 'TNode) : int option =
     shortestPaths graph start
-    |> Map.find exit
-    |> fst
+    |> Map.tryFind exit
+    |> Option.map fst
+    
+let shortestDist (graph: 'TNode -> (int * 'TNode) seq) (start: 'TNode) (exit: 'TNode) : int =
+    tryShortestDist graph start exit |> Option.get
