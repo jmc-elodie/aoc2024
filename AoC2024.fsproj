@@ -24,6 +24,10 @@
     </ItemGroup>
 
     <ItemGroup>
+        <Compile Include="Common\Algo\Pathfinding.fs" />
+    </ItemGroup>
+
+    <ItemGroup>
       <Compile Include="Util.fs" />
       <Content Include="Days\Day01\part1_input.txt">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -105,6 +109,10 @@
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
       <Compile Include="Days\Day17\Solution.fs" />
+      <Content Include="Days\Day18\input.txt">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Compile Include="Days\Day18\Solution.fs" />
       <Compile Include="Program.fs" />
       <Content Include="Readme.md" />
     </ItemGroup>

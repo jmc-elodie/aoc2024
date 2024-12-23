@@ -268,6 +268,8 @@ module Graph =
 type CharGrid = char[,]
 type Direction = N | W | E | S
 
+type Point = (int * int)
+
 module CharGrid = 
     
     let fromString = ParseInput.charArray2D
@@ -304,6 +306,31 @@ module CharGrid =
         let c = newPos ||> Array2D.get grid
         c, newPos
         
+    let charAt (grid: CharGrid) (p: Point) =
+        let x, y = p
+        grid[x,y]
+        
 module SetExt =
     
     let without (other: Set<'a>) (s: Set<'a>) = Set.difference s other
+    
+    
+module Direction =
+    let opposite = function
+        | N -> S
+        | W -> E
+        | E -> W
+        | S -> N
+    
+    let clockwiseOf = function
+        | N -> E
+        | E -> S
+        | S -> W
+        | W -> N
+        
+    let toPoint (d: Direction) : Point =
+        match d with
+        | N -> (0, -1)
+        | E -> (1, 0)
+        | S -> (0, 1)
+        | W -> (-1, 0)
