@@ -13,7 +13,7 @@ type DiskMapItem =
    
 let parseDiskMap (str: string) : DiskMapItem list =
     str
-    |> ParseInput.intString
+    |> ParseInput.digits
     |> Seq.mapi (fun i v -> (i, v))
     |> Seq.map (function
         | i, n when (i % 2 = 0) -> File (i / 2, n)

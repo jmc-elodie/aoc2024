@@ -51,7 +51,7 @@ let parsePrintUpdates (str: string) =
         
     let rulesLines, updatesLines = 
         str
-        |> ParseInput.strings
+        |> ParseInput.lines
         |> List.filter (fun s -> s.Length > 0)
         |> List.partition (_.Contains('|'))
         

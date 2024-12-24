@@ -30,7 +30,7 @@ let parseRobots (str: string) =
         (Vector2(parts[0], parts[1]), Vector2(parts[2], parts[3]))
         
     str
-    |> ParseInput.strings
+    |> ParseInput.lines
     |> Seq.map parseLine
 
 module PartOne =

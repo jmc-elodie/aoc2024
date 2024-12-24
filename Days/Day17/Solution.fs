@@ -42,7 +42,7 @@ let parseProgram (str: string) : ProgramState =
     let registers = Array.zeroCreate 3
     
     registerParts
-    |> ParseInput.strings
+    |> ParseInput.lines
     |> Seq.map parseRegister
     |> Seq.iter (fun (r, i) -> registers[regToInt r] <- i)
         

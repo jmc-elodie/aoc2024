@@ -40,7 +40,7 @@ let parsePoints (str: string) : Point seq =
     let parseLine (line: string) : Point =
         line.Split(',', 2) |> Array.map Int32.Parse |> Tuple.ofArray2
         
-    str |> ParseInput.strings |> Seq.map parseLine
+    str |> ParseInput.lines |> Seq.map parseLine
 
 // A weighted graph of the grid where each node is a position connected to its neighbors.
 // Weights are distance (1)

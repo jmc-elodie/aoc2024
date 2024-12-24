@@ -77,7 +77,7 @@ let parseMachines (str: string) =
         }
      
     str
-    |> ParseInput.strings
+    |> ParseInput.lines
     |> Seq.filter (fun s -> s.Trim().Length > 0)
     |> Seq.mapi parseLine
     |> Seq.chunkBySize 3

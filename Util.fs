@@ -46,7 +46,7 @@ let inline tee fn x = x |> fn |> ignore; x
 
 module ParseInput =
     // Parses an input string into a list of strings
-    let strings (inputStr: string) : string list =
+    let lines (inputStr: string) : string list =
         inputStr.Trim().Split("\n") 
         |> Array.toList
         |> List.map (_.Trim())
@@ -55,7 +55,7 @@ module ParseInput =
     let words (inputStr: string) : string list list =
         let parseLine (s: string) = Regex.Split(s, @"\s+") |> Array.toList
         
-        strings inputStr    
+        lines inputStr    
         |> List.map parseLine 
       
     // Parses an input string into 2 int32 columns and returns a tuple of those columns as lists
@@ -64,7 +64,7 @@ module ParseInput =
             let parts = Regex.Split(s, @"\s+") |> Array.map Int32.Parse
             (parts[0], parts[1])
         
-        strings inputStr    
+        lines inputStr    
         |> List.map parseLine 
         |> List.unzip
 
@@ -75,7 +75,7 @@ module ParseInput =
             |> Array.map Int32.Parse
             
         inputStr
-        |> strings
+        |> lines
         |> List.map parseLine
         
     // Parses an input string into a list of int64 arrays
@@ -85,7 +85,7 @@ module ParseInput =
             |> Array.map Int64.Parse
             
         inputStr
-        |> strings
+        |> lines
         |> List.map parseLine
 
     let charArray2D (inputStr: string) : char[,] =
@@ -93,7 +93,7 @@ module ParseInput =
         
         let lines =
             inputStr
-            |> strings
+            |> lines
             |> List.map parseLine
             |> List.toArray
         
@@ -108,8 +108,8 @@ module ParseInput =
     let atoi c = $"%c{c}" |> Int32.Parse
 
     // Parses an input string like 12345... into a sequence of ints like [ 1; 2; 3; 4; 5; ... ]
-    let intString (str: string) : int seq =
-        str |> strings |> List.head |> (_.ToCharArray()) |> Seq.map atoi
+    let digits (str: string) : int seq =
+        str |> lines |> List.head |> (_.ToCharArray()) |> Seq.map atoi
     
     let split (str: string) : (string * string) =
         let p = str.Trim().ReplaceLineEndings().Split(Environment.NewLine + Environment.NewLine, 2) |> Array.map (_.Trim())
